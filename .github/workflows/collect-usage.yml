@@ -1,0 +1,67 @@
+name: Collect usage stats
+
+on:
+  schedule:
+    # Daily at 06:00 UTC. The HA analytics dump updates roughly daily.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "scripts/collect_usage.py"
+      - ".github/workflows/collect-usage.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-usage
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Collect usage statistics
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASES_REPO: b12e/ha_lynkco_2025
+          INTEGRATION_DOMAIN: lynkco
+          OUTPUT_FILE: usage.json
+        run: python scripts/collect_usage.py
+
+      - name: Write job summary
+        run: |
+          {
+            echo '## ha_lynkco_2025 usage'
+            echo
+            echo '```json'
+            cat usage.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: usage
+          path: usage.json
+
+      - name: Commit updated usage.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- usage.json; then
+            echo "No changes to usage.json"
+            exit 0
+          fi
+          git add usage.json
+          git commit -m "chore: update usage stats [skip ci]"
+          git push
