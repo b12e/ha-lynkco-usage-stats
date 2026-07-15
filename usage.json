@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-07-14T08:18:41.016759+00:00",
+  "generated_at": "2026-07-15T08:24:01.038541+00:00",
   "domain": "lynkco",
   "source_repo": "b12e/ha_lynkco_2025",
   "analytics_source": "https://analytics.home-assistant.io/custom_integrations.json",
   "usage_per_version": {
-    "0.6.0": 9,
+    "0.6.0": 10,
     "0.5.2": 3,
     "0.2.6": 1,
     "0.5.0": 1
   },
-  "total_usage": 14
+  "total_usage": 15
 }
