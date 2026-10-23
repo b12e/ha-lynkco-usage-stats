@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "integrations.json"
       - "scripts/collect_usage.py"
       - ".github/workflows/collect-usage.yml"
 
@@ -33,15 +34,14 @@ jobs:
       - name: Collect usage statistics
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          RELEASES_REPO: b12e/ha_lynkco_2025
-          INTEGRATION_DOMAIN: lynkco
+          OUTPUT_DIR: usage
           OUTPUT_FILE: usage.json
         run: python scripts/collect_usage.py
 
       - name: Write job summary
         run: |
           {
-            echo '## ha_lynkco_2025 usage'
+            echo '## HACS usage stats'
             echo
             echo '```json'
             cat usage.json
@@ -52,16 +52,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: usage
-          path: usage.json
+          path: |
+            usage.json
+            usage/
 
-      - name: Commit updated usage.json
+      - name: Commit updated usage stats
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- usage.json; then
-            echo "No changes to usage.json"
+          git add usage.json usage/
+          if git diff --cached --quiet; then
+            echo "No changes to usage stats"
             exit 0
           fi
-          git add usage.json
           git commit -m "chore: update usage stats [skip ci]"
           git push
